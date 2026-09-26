@@ -12,3 +12,6 @@ credentials.json
 token.json
 *.local.yaml
 KILL
+
+# Your own campaigns (real configs, templates, contact details)
+local/

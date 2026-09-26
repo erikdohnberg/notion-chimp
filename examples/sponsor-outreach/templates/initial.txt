@@ -1,0 +1,13 @@
+Subject: Sponsoring our event – {Company}
+
+Hi {Contact Name|there},
+
+I'm helping organize a community event this winter and we're putting together our sponsor lineup. I think {Company} would be a great fit.
+
+The sponsor package has the options and what each one includes:
+[Sponsor package](https://example.com/sponsor-package.pdf)
+
+Would you be open to a quick call next week?
+
+Thanks,
+Your Name

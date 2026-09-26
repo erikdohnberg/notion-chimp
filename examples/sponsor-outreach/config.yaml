@@ -1,15 +1,16 @@
-# notion-chimp example: event sponsor outreach
+# notion-chimp example: sponsor outreach for a small event
 #
-# Modeled on the Mogul Mania sponsor tracker (a ski-club event looking for
-# local sponsors). Copy this folder, change the property names on the left
-# side of each mapping to match YOUR database, and edit the templates.
+# One row per business, an intro email and two follow-ups a week apart, and a
+# tracked link to the sponsor package. Copy this folder, change the property
+# names on the right side of each mapping to match YOUR database, and edit the
+# templates.
 #
 # Nothing here is special-cased in code. Any database with an email column,
 # a status (Select or Status), two date columns and, optionally, the four
 # tracking columns will work.
 
-name: mogul-mania-sponsors
-timezone: America/Toronto          # "today" for Last Touch / Next Action Date
+name: sponsor-outreach
+timezone: America/Toronto          # your IANA time zone; "today" for Last Touch / Next Action Date
 
 notion:
   # Paste the data source URL (collection://...) or the database URL.

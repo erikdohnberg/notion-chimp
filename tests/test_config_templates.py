@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def test_example_config_loads(secret):
-    cfg = load_config(ROOT / "examples/mogul-mania/config.yaml")
+    cfg = load_config(ROOT / "examples/sponsor-outreach/config.yaml")
     assert cfg.properties.status == "Status"
     assert [s.name for s in cfg.sequence] == ["initial", "follow-up-1", "follow-up-2"]
     assert cfg.tracking.base_url == "https://t.example.com"

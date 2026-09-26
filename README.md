@@ -1,8 +1,10 @@
 # notion-chimp
 
-Run an outreach sequence straight from a Notion database. Rows in your database are the contacts, a status column drives which email each one gets next, and opens and clicks are written back to properties you choose. You host it yourself, so your contact list and engagement data stay in your Notion workspace and nowhere else.
+Open and click tracking for small email campaigns sent from your own mailbox, with a Notion database as the contact list.
 
-It is built for small, personal campaigns: sponsor outreach for an event, a fundraising push, a round of partner emails. It is not a bulk mailer, and it deliberately sends from your own mailbox.
+Rows in your database are the contacts. notion-chimp sends each one the right email from your personal Gmail (or any SMTP account), adds a tracking pixel and tracked links, and writes opens and clicks back to properties you choose on that row. A status column drives who gets which email next, so follow-ups happen on schedule without a separate tool.
+
+It's meant for campaigns you'd otherwise run by hand: a few dozen outreach emails, a fundraising ask, a round of partner or sponsor notes. It is not a bulk mailer or a newsletter platform. You host it yourself, so your contacts and engagement data stay in your Notion workspace.
 
 ## How it works
 
@@ -59,7 +61,7 @@ notion-chimp -c my-config.yaml check
 
 ## Configuration
 
-Start from [`examples/mogul-mania/config.yaml`](examples/mogul-mania/config.yaml). It is a working setup for event sponsor outreach and is commented line by line. The parts that matter:
+Start from [`examples/sponsor-outreach/config.yaml`](examples/sponsor-outreach/config.yaml), which is commented line by line. The parts that matter, with property names from a hypothetical database (use your own):
 
 ```yaml
 properties:
@@ -89,11 +91,11 @@ Values like `${NOTION_CHIMP_BASE_URL}` are read from the environment. Secrets be
 Plain text. The first line is the subject; the body follows a blank line.
 
 ```
-Subject: Sponsoring Mogul Mania 2027 – {Company}
+Subject: Quick question for {Company}
 
 Hi {Contact Name|there},
 
-The sponsor package is here: [Sponsor package](https://example.com/package.pdf)
+Details are here: [One-pager](https://example.com/one-pager.pdf)
 ```
 
 `{Property Name}` inserts that property's value. `{Property Name|fallback}` uses the fallback when the row is empty; without a fallback an empty value skips the row rather than sending "Hi ,". Links can be bare URLs or `[text](url)`. Each email goes out as plain text plus HTML, and only the HTML part is tracked.
@@ -189,7 +191,7 @@ In practice: an open count of zero doesn't mean the email went unread, and one o
 
 The safest test is one fake row and one email to yourself.
 
-1. Add a test row to the database with a company name you'll recognize, a status matching your first step, and any email address. The address is ignored in step 2.
+1. Add a test row to the database with a name you'll recognize, a status matching your first step, and any email address. The address is ignored in step 2.
 2. Send that row's email to yourself without advancing it:
 
    ```bash
@@ -210,9 +212,11 @@ pip install -e '.[dev]'
 pytest
 ```
 
-## Example: Mogul Mania sponsor outreach
+## Example: sponsor outreach
 
-[`examples/mogul-mania/`](examples/mogul-mania/) is the reference setup. It was built for sponsor outreach for a ski club's mogul competition: each row is a local business, the sequence is an initial email and two follow-ups a week apart, and the tracked link is the sponsor package. To adapt it, copy the folder, point `data_source` at your database, rename the properties on the right-hand side to match yours, and rewrite the templates. If your statuses are different, change `when_status` and `set_status` to match.
+[`examples/sponsor-outreach/`](examples/sponsor-outreach/) is a complete setup for a common case: finding sponsors for a small event. Each row is a local business, the sequence is an intro email and two follow-ups a week apart, and the tracked link is the sponsor package. To adapt it, copy the folder, point `data_source` at your database, change the property names on the right-hand side to match yours, and rewrite the templates. If your statuses are different, change `when_status` and `set_status` to match.
+
+Keep your real config and templates outside the repo, or in the gitignored `local/` folder, so your database id and contact details never get committed.
 
 ## License
 
