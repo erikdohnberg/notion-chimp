@@ -72,6 +72,10 @@ class Tracker:
         return Hit(page_id=meta["p"], step=meta.get("s", ""), sent_at=int(meta.get("t", 0)),
                    url=result.tracked_url)
 
+    def pixel_tag(self, metadata: dict) -> str:
+        return (f'<img src="{html_lib.escape(self.open_url(metadata))}" width="1" height="1" '
+                'alt="" style="display:block;border:0;width:1px;height:1px" />')
+
     def instrument_html(self, body_html: str, metadata: dict) -> str:
         """Wrap every http(s) link in a click URL and append the open pixel."""
         def swap(m: re.Match) -> str:
@@ -79,8 +83,7 @@ class Tracker:
             return f"{m.group(1)}{m.group(2)}{html_lib.escape(self.click_url(original, metadata))}{m.group(2)}"
 
         out = _HREF.sub(swap, body_html)
-        pixel = (f'<img src="{html_lib.escape(self.open_url(metadata))}" width="1" height="1" '
-                 'alt="" style="display:block;border:0;width:1px;height:1px" />')
+        pixel = self.pixel_tag(metadata)
         if re.search(r"</body>", out, re.I):
             return re.sub(r"</body>", pixel + "</body>", out, count=1, flags=re.I)
         return out + pixel

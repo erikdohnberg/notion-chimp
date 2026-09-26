@@ -6,6 +6,8 @@
     notion-chimp -c config.yaml run           dry run: show what would send
     notion-chimp -c config.yaml run --send    actually send and advance rows
     notion-chimp -c config.yaml test-send --page URL --to you@example.com
+    notion-chimp -c config.yaml link --page URL --url https://...
+                                              tracked link for an email you write by hand
     notion-chimp -c config.yaml serve         run the tracking server
 """
 from __future__ import annotations
@@ -157,6 +159,37 @@ def cmd_test_send(args, config: Config) -> int:
     return 0 if result.sent and not result.error else 1
 
 
+def cmd_link(args, config: Config) -> int:
+    """Print tracked links (and optionally the open pixel) for one row, for
+    pasting into an email you write yourself."""
+    from .properties import parse_id
+    from .tracking import Tracker
+    if not args.url and not args.pixel:
+        print("Nothing to do: pass --url and/or --pixel", file=sys.stderr)
+        return 2
+    tracker = Tracker(config.tracking.base_url, config.tracking.secret_key)
+    page_id = parse_id(args.page)
+    label = page_id
+    if not args.offline:
+        # Catch typos now: a link for the wrong row would track silently into nothing
+        notion = _notion(config)
+        page = notion.get_page(page_id)
+        ds = notion.resolve_data_source(config.data_source)
+        parent = (page.get("parent") or {}).get("data_source_id")
+        if parent and parent.replace("-", "") != ds.replace("-", ""):
+            print("Error: that page is not a row in the configured database", file=sys.stderr)
+            return 1
+        from .campaign import row_label
+        label = row_label(config, page.get("properties", {}))
+    meta = Tracker.metadata(page_id, args.step)
+    print(f"# {label}  (step: {args.step})", file=sys.stderr)
+    for url in args.url:
+        print(tracker.click_url(url, meta))
+    if args.pixel:
+        print(tracker.pixel_tag(meta))
+    return 0
+
+
 def cmd_serve(args, config: Config) -> int:
     from .server import create_app
     app = create_app(config)
@@ -191,6 +224,14 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--step", help="sequence step to render (default: first step)")
     p.add_argument("--advance", action="store_true", help="also advance the row's status and dates")
     p.set_defaults(fn=cmd_test_send)
+
+    p = sub.add_parser("link", help="make tracked links for an email you write yourself")
+    p.add_argument("--page", required=True, help="Notion page URL or id of the recipient's row")
+    p.add_argument("--url", action="append", default=[], help="destination URL (repeat for several)")
+    p.add_argument("--pixel", action="store_true", help="also print the open-tracking <img> tag")
+    p.add_argument("--step", default="manual", help="label for this email (default: manual)")
+    p.add_argument("--offline", action="store_true", help="skip checking the row in Notion")
+    p.set_defaults(fn=cmd_link)
 
     p = sub.add_parser("serve", help="run the tracking server (use gunicorn in production)")
     p.add_argument("--host", default="127.0.0.1")

@@ -227,6 +227,28 @@ Things worth knowing before you send to real people:
 - Keep it personal. These emails come from your real address, so a recipient marking one as spam affects your mailbox's reputation. Short, specific, plainly written emails to people who have a reason to hear from you are what this tool is for.
 - Stop everything at once with the kill switch (see below) if something looks wrong mid-send.
 
+## Tracked links for emails you write yourself
+
+Sometimes the right email is one you write by hand: a reply, a personal note, a message that doesn't fit a template. `link` makes a tracked link for any row so clicks from that email still land in Notion:
+
+```bash
+notion-chimp -c local/my-campaign/config.yaml link \
+  --page "https://www.notion.so/Acme-Skis-0a1b2c3d4e5f4a6b8c7d9e0f1a2b3c4d" \
+  --url https://example.com/sponsor-package.pdf
+```
+
+It prints a URL like `https://notion-chimp-yourname.vercel.app/c/gAAAAAB...`. In Gmail, select the text you want to link, choose Insert link, and paste it. Repeat `--url` for several links; each one redirects to its own destination and all of them record against the same row.
+
+A few details:
+
+- The row is checked against your database first, so a link for the wrong page fails loudly instead of tracking into nothing. `--offline` skips the check if you're not connected.
+- `--pixel` also prints the open-tracking `<img>` tag. That only helps where you can edit an email's HTML; Gmail's composer doesn't allow it, so for hand-written Gmail messages, tracked links are the signal you get.
+- Links are stamped with the time you create them, and the scanner filter ignores clicks in the first few seconds after that. Create the link right before you send.
+- `link` doesn't touch the row's status or dates. If the email counts as a touch, update last touch in Notion yourself.
+- `--step` sets the label stored in the link (default `manual`), which is useful if you look at server logs.
+
+Nothing is stored anywhere when you create a link. Everything the server needs is encrypted inside the URL, which is also why there's no link management page: there's no list of links to manage, and your results are already on the rows in Notion.
+
 ## The tracking server
 
 The server has two routes:

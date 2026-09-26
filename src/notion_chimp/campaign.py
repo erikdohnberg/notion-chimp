@@ -42,6 +42,17 @@ class Outcome:
     error: str | None = None
 
 
+def row_label(config: Config, props: dict) -> str:
+    """Human-readable name for a row: the configured title property, else the title column."""
+    title = config.properties.title
+    if title and title in props:
+        return plain_text(props[title]) or "(untitled)"
+    for p in props.values():
+        if p.get("type") == "title":
+            return plain_text(p) or "(untitled)"
+    return "(untitled)"
+
+
 def extract_email(value: str) -> str | None:
     m = _EMAIL.search(value or "")
     return m.group(0) if m else None
@@ -68,13 +79,7 @@ class Campaign:
         return {n: p["type"] for n, p in self.notion.schema(self.data_source_id).items()}
 
     def _label(self, props: dict) -> str:
-        title = self.config.properties.title
-        if title and title in props:
-            return plain_text(props[title]) or "(untitled)"
-        for p in props.values():
-            if p.get("type") == "title":
-                return plain_text(p) or "(untitled)"
-        return "(untitled)"
+        return row_label(self.config, props)
 
     def _is_due(self, props: dict) -> bool:
         raw = read_value(props.get(self.config.properties.next_action_date))
