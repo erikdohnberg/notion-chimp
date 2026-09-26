@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+
+# Secrets and local state – never commit these
+.env
+credentials.json
+token.json
+*.local.yaml
+KILL
+
+# Your own campaigns (real configs, templates, contact details)
+local/
