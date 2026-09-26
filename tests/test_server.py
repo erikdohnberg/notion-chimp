@@ -61,3 +61,27 @@ def test_kill_switch_still_serves_but_does_not_write(config, monkeypatch):
     assert client.get(path, headers=UA).status_code == 302
     assert client.get("/healthz").json["killed"] is True
     assert notion.updates == []
+
+
+def test_starts_without_secrets(config, monkeypatch):
+    config.notion_token = ""
+    config.tracking.secret_key = ""
+    client = create_app(config, background=False).test_client()
+    health = client.get("/healthz").json
+    assert health["notion_token_set"] is False and health["secret_key_set"] is False
+    assert client.get("/o/anything.gif").data == PIXEL_GIF
+    assert client.get("/c/anything").status_code == 404
+
+
+def test_vercel_config_from_env(config, monkeypatch):
+    import importlib
+    import yaml
+    raw = {"notion": {"data_source": "collection://x"}, "properties": {
+        "email": "E", "status": "S", "last_touch": "L", "next_action_date": "N"},
+        "sequence": [], "sender": {"provider": "gmail", "from_address": "a@b.c"},
+        "tracking": {"base_url": "https://t.example.com"}}
+    monkeypatch.setenv("NOTION_CHIMP_CONFIG_YAML", yaml.safe_dump(raw))
+    monkeypatch.setenv("VERCEL", "1")
+    import notion_chimp.wsgi as wsgi
+    importlib.reload(wsgi)
+    assert wsgi.app.test_client().get("/healthz").json["ok"] is True

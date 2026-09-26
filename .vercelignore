@@ -1,0 +1,7 @@
+.venv
+.env
+credentials.json
+token.json
+tests
+examples
+Dockerfile

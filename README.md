@@ -139,6 +139,21 @@ NOTION_CHIMP_CONFIG=my-config.yaml gunicorn -w 2 -b 0.0.0.0:8000 notion_chimp.ws
 
 A `Dockerfile` is included. Set `NOTION_CHIMP_BASE_URL` to the public URL before sending anything, because that URL is baked into every email.
 
+### Deploying to Vercel
+
+The repo root has an `app.py` and `requirements.txt`, so Vercel deploys it as a Flask app with no extra setup. Import the repo (or your fork) as a Vercel project, then set these environment variables in the project settings:
+
+| Variable | Value |
+| --- | --- |
+| `NOTION_CHIMP_CONFIG_YAML` | The full contents of your config file. This keeps your database id and property names out of the repo. |
+| `NOTION_TOKEN` | Your Notion integration secret. Mark it Sensitive. |
+| `NOTION_CHIMP_SECRET_KEY` | The same key you use locally for sending. Mark it Sensitive. |
+| `NOTION_CHIMP_BASE_URL` | The deployment's production URL, e.g. `https://notion-chimp-you.vercel.app` |
+
+Turn off Vercel Authentication (Settings, Deployment Protection) for production, or every pixel and link will hit a login wall. Visit `/healthz` after deploying; it reports whether the token and key are set without revealing them.
+
+Three differences from a long-running server: writes to Notion happen before the response (Vercel can freeze a function as soon as it responds), the dedupe window is per function instance so a few extra repeat opens may count, and the kill switch file doesn't apply. Flip the kill switch by setting `NOTION_CHIMP_KILL_SWITCH=1` and redeploying.
+
 ### Filtering false opens and clicks
 
 A lot of what hits a tracking pixel isn't a person. notion-chimp ignores:
