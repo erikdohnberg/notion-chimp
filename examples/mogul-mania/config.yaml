@@ -1,0 +1,73 @@
+# notion-chimp example: event sponsor outreach
+#
+# Modeled on the Mogul Mania sponsor tracker (a ski-club event looking for
+# local sponsors). Copy this folder, change the property names on the left
+# side of each mapping to match YOUR database, and edit the templates.
+#
+# Nothing here is special-cased in code. Any database with an email column,
+# a status (Select or Status), two date columns and, optionally, the four
+# tracking columns will work.
+
+name: mogul-mania-sponsors
+timezone: America/Toronto          # "today" for Last Touch / Next Action Date
+
+notion:
+  # Paste the data source URL (collection://...) or the database URL.
+  # In Notion: open the database, "..." menu > Copy link, or Manage data sources.
+  data_source: "collection://00000000-0000-0000-0000-000000000000"
+  token_env: NOTION_TOKEN          # name of the env var holding the integration secret
+
+# Role -> property name in your database
+properties:
+  title: Company
+  email: Contact Email or Route    # text is fine; the first email address found is used
+  status: Status
+  last_touch: Last Touch
+  next_action_date: Next Action Date
+  # Tracking write-back. Any of these can be left out. Add them to your
+  # database yourself; notion-chimp never creates properties.
+  open_count: Open Count           # Number
+  first_opened: First Opened       # Date
+  link_clicked: Brochure Clicked   # Checkbox (or Date to record when)
+  last_engagement: Last Engagement # Date
+
+# Each step fires for rows whose status is `when_status` and whose
+# Next Action Date is empty or today/earlier. After sending, the row moves to
+# `set_status`, Last Touch becomes today and Next Action Date moves ahead.
+sequence:
+  - name: initial
+    when_status: Ready
+    template: templates/initial.txt
+    set_status: Contacted
+    next_action_in_days: 7
+  - name: follow-up-1
+    when_status: Contacted
+    template: templates/follow-up-1.txt
+    set_status: Follow-up 1
+    next_action_in_days: 7
+  - name: follow-up-2
+    when_status: Follow-up 1
+    template: templates/follow-up-2.txt
+    set_status: Follow-up 2
+    # no next_action_in_days: Next Action Date is cleared, the sequence ends
+
+sender:
+  provider: gmail                  # or: smtp
+  from_address: you@example.com
+  from_name: Your Name
+  # reply_to: sponsors@example.com
+
+tracking:
+  enabled: true
+  base_url: ${NOTION_CHIMP_BASE_URL}
+  secret_key_env: NOTION_CHIMP_SECRET_KEY
+  filters:
+    min_seconds_after_send: 30       # opens sooner than this are scanners/prefetch
+    click_min_seconds_after_send: 10 # link scanners click within seconds
+    dedupe_minutes: 30               # repeat opens inside this window count once
+    apple_mpp: skip                  # skip | count  (see README)
+    ignore_ips: []                   # e.g. your office IP, so your own views don't count
+
+kill_switch:
+  env: NOTION_CHIMP_KILL_SWITCH      # set to 1 to stop sending and write-back
+  file: ./KILL                       # or create this file (no restart needed)
